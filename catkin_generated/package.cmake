@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "filtro_particulas")
+set(filtro_particulas_MAINTAINER "au <au@todo.todo>")
+set(filtro_particulas_DEPRECATED "")
+set(filtro_particulas_VERSION "0.0.0")
+set(filtro_particulas_BUILD_DEPENDS "roscpp" "rospy" "std_msgs")
+set(filtro_particulas_RUN_DEPENDS "roscpp" "rospy" "std_msgs")
+set(filtro_particulas_BUILDTOOL_DEPENDS "catkin")

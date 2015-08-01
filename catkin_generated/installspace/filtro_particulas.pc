@@ -1,0 +1,8 @@
+prefix=/home/au/catkin_ws/install
+
+Name: filtro_particulas
+Description: Description of filtro_particulas
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/au/catkin_ws/install/lib 
+Requires: 
