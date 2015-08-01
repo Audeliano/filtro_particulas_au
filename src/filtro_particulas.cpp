@@ -6,25 +6,26 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n)
 
 	coordx_sub_ = n.subscribe("coordx", 4000, &Filtro_Particulas::coordxCallback, this);
 	coordy_sub_ = n.subscribe("coordy", 4000, &Filtro_Particulas::coordyCallback, this);
+	coordxy_sub_ = n.subscribe("coordxy", 4000, &Filtro_Particulas::coordxyCallback, this);
 
-	once_ = true;
+	once_ = 0;
 	l_ = 0;
 	min_x_ = 10000;
 	min_y_ = 10000;
 	max_x_ = -10000;
 	max_y_ = -10000;
 
-	particle_pose_[30];
 	single_pose_.x = 0;
 	single_pose_.y = 0;
 	single_pose_.theta = 0;
-
+	num_part_ = 30;
 }
 
 Filtro_Particulas::~Filtro_Particulas()
 {
 	coordx_sub_.shutdown();
 	coordy_sub_.shutdown();
+	coordxy_sub_.shutdown();
 }
 
 void Filtro_Particulas::coordxCallback (const std_msgs::Int32MultiArray::ConstPtr& coordx)
@@ -65,19 +66,37 @@ void Filtro_Particulas::coordyCallback (const std_msgs::Int32MultiArray::ConstPt
 	return;
 }
 
+void Filtro_Particulas::coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& coordxy)
+{
+	//Carregar os valores de xy dos landmarks.
+
+	l_ = 0;
+
+	for(std::vector<int>::const_iterator it = coordxy->data.begin() ; it != coordxy->data.end(); ++it){
+
+		landmarks_xy_[l_] = *it;
+		l_++;
+	}
+	return;
+}
+
 void Filtro_Particulas::createParticles()
 {
 	//Criando partículas randômicas.
-	if(once_ == true)
+	if(once_ == 3)
 	{
 		int offset_x = max_x_ - min_x_ + 1;
 		int offset_y = max_y_ - min_y_ + 1;
 
-		for (int i = 0; i < 30; i++)
+		//mudando a semente do random
+		srand(time(NULL));
+
+		for (int i = 0; i < num_part_; i++)
 		{
 			single_pose_.x = rand() % offset_x + min_x_; //random de min_x_ até max_x_
 			single_pose_.y = rand() % offset_y + min_y_;
 			single_pose_.theta = (rand() % 180 + 0) - 90;
+
 			particle_pose_[i] = single_pose_;
 
 			cout<<"x: "<<single_pose_.x<<" ; y: "<<single_pose_.y<<" ; theta: "<<single_pose_.theta<<endl;
@@ -88,13 +107,14 @@ void Filtro_Particulas::createParticles()
 
 void Filtro_Particulas::readLandmarks()
 {
-	if(once_ == true)
+	if(once_ == 3)
 	{
 		//Teste para verificar se a matriz foi carregada corretamente.
 		for(int f=0;f<l_;f++){
-			cout << "[[" << landmarks_[f][0] << ", " << landmarks_[f][1] << "]]";
+			cout << "[[" << landmarks_[f][0] << ", " << landmarks_[f][1] << "]] ";
+			cout << " (" << landmarks_xy_[f] << ")" << endl;
 
-					}
+		}
 		cout<<"\nl_: "<<l_<<endl;
 		cout << "max: " << max_x_ << "; " << max_y_ << endl;
 		cout << "min: " << min_x_ << "; " << min_y_ << endl;
@@ -119,10 +139,10 @@ void Filtro_Particulas::spin()
 	{
 		ros::spinOnce();
 		loopRate.sleep();
-		readLandmarks();
+		//readLandmarks();
 		createParticles();
 
-		once_ = false;
+		if(once_ < 5){once_++;}
 	}
 
 }

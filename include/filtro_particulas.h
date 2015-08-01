@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <time.h>
 
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
@@ -35,6 +36,7 @@ class Filtro_Particulas
 
 		void coordxCallback (const std_msgs::Int32MultiArray::ConstPtr& coordx);
 		void coordyCallback (const std_msgs::Int32MultiArray::ConstPtr& coordy);
+		void coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& coordxy);
 
 		void spin();
 
@@ -46,19 +48,22 @@ class Filtro_Particulas
 		ros::Subscriber scan_sub_;
 		ros::Subscriber coordx_sub_;
 		ros::Subscriber coordy_sub_;
+		ros::Subscriber coordxy_sub_;
 
 		ros::Publisher particle_cloud_;
 
-		geometry_msgs::Pose2D particle_pose_[];
 		geometry_msgs::Pose2D single_pose_;
+		geometry_msgs::Pose2D particle_pose_[1000];
 
 		int landmarks_[4000][2];
+		int landmarks_xy_[4000];
 		int l_;
 		int min_x_;
 		int min_y_;
 		int max_x_;
 		int max_y_;
-		bool once_;
+		int once_;
+		int num_part_;
 
 };
 
