@@ -11,44 +11,58 @@
 #include <stdlib.h>
 #include <vector>
 #include <time.h>
+#include <math.h>
+#include <iostream>
+#include <random_numbers/random_numbers.h>
 
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "sensor_msgs/LaserScan.h"
+#include "tf/tf.h"
 
 using namespace std;
 
 class Filtro_Particulas
 {
 	public:
-		Filtro_Particulas(ros::NodeHandle n);
+		Filtro_Particulas(ros::NodeHandle n, double res);
 		virtual ~Filtro_Particulas();
 
 	public:
-		//funções para criar partículas
 		void readLandmarks();
 		void createParticles();
+
 		void fakeLaser();
 		void findObstacle();
+		void moveParticles();
+		void weightParticles();
+		void resample();
 
-		//funções para atualizar as partículas
+		void gaussian(double mu, double sigma, double x);
+		void set_noise(double move_noise, double turn_noise);
+
 		void odomCallback (const nav_msgs::OdometryConstPtr& msg);
-
-		void coordxCallback (const std_msgs::Int32MultiArray::ConstPtr& coordx);
-		void coordyCallback (const std_msgs::Int32MultiArray::ConstPtr& coordy);
-		void coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& coordxy);
+		void laserCallback (const sensor_msgs::LaserScanConstPtr& scan);
+		//void min_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& min_xy);
+		//void max_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& max_xy);
+		void occ_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& occ_coordxy);
+		void free_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& free_coordxy);
 
 		void spin();
 
 	private:
 		ros::NodeHandle n_;
+		double res_;
+
 		nav_msgs::Odometry odometry_;
 
 		ros::Subscriber odom_sub_;
 		ros::Subscriber scan_sub_;
-		ros::Subscriber coordx_sub_;
-		ros::Subscriber coordy_sub_;
-		ros::Subscriber coordxy_sub_;
+		//ros::Subscriber min_xy_sub_;
+		//ros::Subscriber max_xy_sub_;
+		ros::Subscriber occ_coordxy_sub_;
+		ros::Subscriber free_coordxy_sub_;
 
 		ros::Publisher particle_cloud_;
 
@@ -57,13 +71,32 @@ class Filtro_Particulas
 
 		int landmarks_[4000][2];
 		int landmarks_xy_[4000];
+		int free_xy_[40000];
 		int l_;
+		int f_;
+		int num_free_;
 		int min_x_;
 		int min_y_;
 		int max_x_;
 		int max_y_;
 		int once_;
 		int num_part_;
+		geometry_msgs::Pose2D delta_pose_;
+		geometry_msgs::Pose2D pose_anterior_;
+
+		geometry_msgs::Pose2D pose;
+
+		//int delta_y_;
+		//int delta_theta_;
+
+		float laser_data_[3];
+		float pose_x_;
+		float pose_y_;
+		float pose_theta_;
+
+		double gaussian_;
+		double move_noise_;
+		double turn_noise_;
 
 };
 

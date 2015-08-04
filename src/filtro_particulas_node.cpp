@@ -6,7 +6,7 @@ int main (int argc, char** argv)
 
 	ros::NodeHandle n;
 
-	Filtro_Particulas fp(n);
+	Filtro_Particulas fp(n, 0.05);
 
 	fp.spin();
 
