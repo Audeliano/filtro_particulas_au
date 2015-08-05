@@ -13,7 +13,8 @@
 #include <time.h>
 #include <math.h>
 #include <iostream>
-#include <random_numbers/random_numbers.h>
+//#include <random>
+#include <cmath>
 
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
@@ -90,6 +91,8 @@ class Filtro_Particulas
 		//int delta_theta_;
 
 		float laser_data_[3];
+		float fake_laser_data_[3];
+		geometry_msgs::Pose2D fake_laser_pose_[3];
 		float pose_x_;
 		float pose_y_;
 		float pose_theta_;
