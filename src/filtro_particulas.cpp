@@ -43,6 +43,13 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	pose.y = 0;
 	pose.theta = 0;
 
+	obstacle_finded_ = false;
+	fake_laser_data_[num_part_][3];
+	size_occ_coordxy_ = 0;
+	obstacle_ = 0;
+	achou = 0;
+	loop = 0;
+	cont = 0;
 
 }
 
@@ -99,6 +106,9 @@ void Filtro_Particulas::occ_coordxyCallback (const std_msgs::Int32MultiArray::Co
 		landmarks_xy_[l_] = *it;
 		l_++;
 	}
+
+	//cout<<"sizeof: "<<l_<<endl;
+
 	return;
 }
 
@@ -167,14 +177,15 @@ void Filtro_Particulas::createParticles()
 
 			single_pose_.x = pose_x * res_; //1 pixel -> 0.05m
 			single_pose_.y = pose_y * res_;
-			single_pose_.theta = (rand() % 360 + 0) - 180; //em graus //
+			single_pose_.theta = (rand() % 360 + 0) - 180; //em graus
 			single_pose_.theta = single_pose_.theta * M_PI / 180; //em radianos
 
 			particle_pose_[i] = single_pose_;
 
-			cout<<"x: "<<single_pose_.x<<" ; y: "<<single_pose_.y<<" ; theta: "<<single_pose_.theta<<endl;
+			//cout<<"x: "<<single_pose_.x<<" ; y: "<<single_pose_.y<<" ; theta: "<<single_pose_.theta<<endl;
 			//cout<<"particle_pose["<<i<<"]:\n"<<particle_pose_[i]<<endl;
 		}
+		loop = 1;
 	}
 }
 
@@ -205,11 +216,15 @@ void Filtro_Particulas::gaussian(double mu, double sigma, double x)
 
 void Filtro_Particulas::fakeLaser()
 {
+
+	if(loop == 2){
 	//laser_data_[0] +90º
 	//laser_data_[1] 0º
 	//laser_data_[2] -90º
-
-
+	double x = 0;
+	double y = 0;
+	int xi = 0;
+	int yi = 0;
 
 	for (int i = 0; i < num_part_; i++)
 	{
@@ -228,20 +243,85 @@ void Filtro_Particulas::fakeLaser()
 		if(fake_laser_pose_[2].theta <= - M_PI)
 			fake_laser_pose_[2].theta += 2 * M_PI;
 
+		//pose.x e pose.y para cada fake_laser
 		fake_laser_pose_[0].x = fake_laser_pose_[1].x = fake_laser_pose_[2].x = particle_pose_[i].x;
 		fake_laser_pose_[0].y = fake_laser_pose_[1].y = fake_laser_pose_[2].y = particle_pose_[i].y;
 
+		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[0]: \n"<< fake_laser_pose_[0]<<endl;
+		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[1]: \n"<< fake_laser_pose_[1]<<endl;
+		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[2]: \n"<< fake_laser_pose_[2]<<endl;
 
+		for(int num_laser = 0; num_laser <= 2; num_laser++)
+		{
+			double passo_base = 0.025;
+			double passo = 0;
+			for(int p = 1; p <= 80; p++)
+			{
+				//varredura do fake_laser
+				passo = passo_base * p; //+random.gauss
+				//cout<<"passo: "<<passo<<endl;
+				x = fake_laser_pose_[num_laser].x + (cos(fake_laser_pose_[num_laser].theta) * passo);
+				y = fake_laser_pose_[num_laser].y + (sin(fake_laser_pose_[num_laser].theta) * passo);
+				if(x >= 0 && y >= 0)
+				{
+					//cout<<"Nao arredondado--- "<<"x: "<<x<<"; y: "<<y<<endl;
+					//arredondando os valores de x e y
+					xi = x / res_;
+					//x = xi * res_;
+					yi = y / res_;
+					//y = yi * res_;
+					cont++;
+					//cout<<"Arredondado--- "<<"xi: "<<xi<<"; yi: "<<yi<<" cont: "<<cont<<endl;
+					//cout<<"Arredondado--- "<<"x: "<<x<<"; y: "<<y<<" cont: "<<cont<<endl;
 
+					findObstacle(xi, yi);
+					if (obstacle_finded_ == true)
+					{
+						fake_laser_data_[i][num_laser] = obstacle_;
+						p = 100;
+					}else fake_laser_data_[i][num_laser] = -100;
+				}
 
-
+			}
+			cout<<"fake_laser_data_["<<i<<"]"<<"["<<num_laser<<"]: "<<fake_laser_data_[i][num_laser]<<endl;
+		}
 
 	}
+	loop++;
+	}
+}
+
+
+
+double Filtro_Particulas::findObstacle(double x, double y)
+{
+
+	int esq, meio, dir;
+	esq = 0;
+	dir = l_ - 1;
+	//cout<<"x: "<<x<<" ; y: "<<y<<endl;
+	obstacle_ = (10000 * x) + y;
+	//cout<<"obstacle: "<<obstacle_<<endl;
+	while (esq <= dir){
+		meio = (esq + dir) / 2;
+		if ( landmarks_xy_[meio] == obstacle_)
+		{
+			obstacle_finded_ = true;
+			achou++;
+			cout<<"ACHOU OBST: "<<achou<<endl;
+			return obstacle_;
+		}
+		if ( landmarks_xy_[meio] < obstacle_) esq = meio + 1;
+		else dir = meio - 1;
+	}
+	obstacle_finded_ = false;
+	return -1;
 }
 
 void Filtro_Particulas::moveParticles()
 {
-	int pose_x = 2;
+	if(loop == 1){
+	int pose_x = 0.025;
 	pose_x_ += pose_x;
 
 	delta_pose_.x = pose_x_ - pose_anterior_.x; //+ random.gauss(0,0);
@@ -262,13 +342,13 @@ void Filtro_Particulas::moveParticles()
 		particle_pose_[p].theta += delta_pose_.theta;
 		//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p]<<endl;
 	}
-
-	cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p-1]<<endl;
+	loop++;
+	//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p-1]<<endl;
+	}
 }
-
 void Filtro_Particulas::spin()
 {
-	ros::Rate loopRate(5);
+	ros::Rate loopRate(10);
 
 	while(n_.ok())
 	{
@@ -277,6 +357,8 @@ void Filtro_Particulas::spin()
 		//readLandmarks();
 		createParticles();
 		moveParticles();
+		fakeLaser();
+
 
 		if(once_ < 5){once_++;}
 	}

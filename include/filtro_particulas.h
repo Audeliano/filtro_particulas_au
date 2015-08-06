@@ -35,7 +35,7 @@ class Filtro_Particulas
 		void createParticles();
 
 		void fakeLaser();
-		void findObstacle();
+		double findObstacle(double x, double y);
 		void moveParticles();
 		void weightParticles();
 		void resample();
@@ -82,6 +82,11 @@ class Filtro_Particulas
 		int max_y_;
 		int once_;
 		int num_part_;
+		bool obstacle_finded_;
+		int obstacle_;
+		int achou;
+		int loop;
+		int cont;
 		geometry_msgs::Pose2D delta_pose_;
 		geometry_msgs::Pose2D pose_anterior_;
 
@@ -91,15 +96,15 @@ class Filtro_Particulas
 		//int delta_theta_;
 
 		float laser_data_[3];
-		float fake_laser_data_[3];
 		geometry_msgs::Pose2D fake_laser_pose_[3];
 		float pose_x_;
 		float pose_y_;
 		float pose_theta_;
-
+		double fake_laser_data_[0][0];
 		double gaussian_;
 		double move_noise_;
 		double turn_noise_;
+		int size_occ_coordxy_;
 
 };
 
