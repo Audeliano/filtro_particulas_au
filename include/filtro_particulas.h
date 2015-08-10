@@ -4,6 +4,8 @@
 #include "ros/ros.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/Pose2D.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "geometry_msgs/PoseStamped.h"
 
 #include "map_server/image_loader.h"
 
@@ -13,8 +15,9 @@
 #include <time.h>
 #include <math.h>
 #include <iostream>
-//#include <random>
+#include <random>
 #include <cmath>
+#include <cstdlib>
 
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
@@ -39,9 +42,11 @@ class Filtro_Particulas
 		void moveParticles();
 		void weightParticles();
 		void resample();
+		double measurementProb(int particleMP, int laserMP);
 
-		void gaussian(double mu, double sigma, double x);
-		void set_noise(double move_noise, double turn_noise);
+		double gaussian(double mu, double sigma, double x);
+		double gaussian(double mu, double sigma);
+		//void set_noise(double move_noise, double turn_noise);
 
 		void odomCallback (const nav_msgs::OdometryConstPtr& msg);
 		void laserCallback (const sensor_msgs::LaserScanConstPtr& scan);
@@ -50,11 +55,18 @@ class Filtro_Particulas
 		void occ_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& occ_coordxy);
 		void free_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& free_coordxy);
 
+		void pubInicialPose();
+
 		void spin();
+
+		void sorteioMaluco();
+		void merge(int m, int n, double A[], double B[], double C[]);
 
 	private:
 		ros::NodeHandle n_;
 		double res_;
+
+		int num_part_;
 
 		nav_msgs::Odometry odometry_;
 
@@ -65,10 +77,15 @@ class Filtro_Particulas
 		ros::Subscriber occ_coordxy_sub_;
 		ros::Subscriber free_coordxy_sub_;
 
-		ros::Publisher particle_cloud_;
+		ros::Publisher particle_cloud_pub_;
+		ros::Publisher initial_pose_pub_;
 
 		geometry_msgs::Pose2D single_pose_;
-		geometry_msgs::Pose2D particle_pose_[1000];
+		geometry_msgs::Pose2D particle_pose_[10000];
+		geometry_msgs::Pose2D particle_resample_[10000];
+		geometry_msgs::PoseWithCovarianceStamped initial_pose_;
+		geometry_msgs::PoseStamped initial_pose2_;
+		//geometry_msgs::Quaternion odom_quat_;
 
 		int landmarks_[4000][2];
 		int landmarks_xy_[4000];
@@ -81,12 +98,28 @@ class Filtro_Particulas
 		int max_x_;
 		int max_y_;
 		int once_;
-		int num_part_;
 		bool obstacle_finded_;
 		int obstacle_;
 		int achou;
 		int loop;
 		int cont;
+		double total;
+		double probt;
+		double passo;
+		double sum;
+
+		int rand_xy;
+		double pose_x;
+		double pose_y;
+
+		double x;
+		double y;
+		int xi;
+		int yi;
+		int i;
+		int num_laser;
+
+
 		geometry_msgs::Pose2D delta_pose_;
 		geometry_msgs::Pose2D pose_anterior_;
 
@@ -95,16 +128,31 @@ class Filtro_Particulas
 		//int delta_y_;
 		//int delta_theta_;
 
-		float laser_data_[3];
+		double laser_data_[3];
 		geometry_msgs::Pose2D fake_laser_pose_[3];
-		float pose_x_;
-		float pose_y_;
-		float pose_theta_;
-		double fake_laser_data_[0][0];
+		double pose_x_;
+		double pose_y_;
+		double pose_theta_;
+		double fake_laser_data_[10000][3];
 		double gaussian_;
 		double move_noise_;
 		double turn_noise_;
+		double laser_noise_;
 		int size_occ_coordxy_;
+		double weight_part_laser_[10000][3];
+		double weight_part_[10000];
+		double pool_[10000];
+		double weight_ord_[10000];
+
+		bool free_ok_;
+		bool occ_ok_;
+		bool odom_ok_;
+		bool laser_ok_;
+		int create_particle_ok_;
+
+
+
+
 
 };
 

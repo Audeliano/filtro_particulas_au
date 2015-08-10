@@ -116,6 +116,8 @@ add_executable(filtro_particulas
 target_link_libraries(filtro_particulas
   ${catkin_LIBRARIES})
 
+set (CMAKE_CXX_FLAGS "-std=c++0x")
+
 #############
 ## Install ##
 #############
