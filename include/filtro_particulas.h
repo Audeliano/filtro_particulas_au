@@ -6,6 +6,7 @@
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/PoseArray.h"
 
 #include "map_server/image_loader.h"
 
@@ -56,11 +57,12 @@ class Filtro_Particulas
 		void free_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& free_coordxy);
 
 		void pubInicialPose();
+		void cloud();
 
 		void spin();
 
-		void sorteioMaluco();
-		void merge(int m, int n, double A[], double B[], double C[]);
+
+
 
 	private:
 		ros::NodeHandle n_;
@@ -97,7 +99,7 @@ class Filtro_Particulas
 		int min_y_;
 		int max_x_;
 		int max_y_;
-		int once_;
+		int zerar;
 		bool obstacle_finded_;
 		int obstacle_;
 		int achou;
@@ -149,8 +151,6 @@ class Filtro_Particulas
 		bool odom_ok_;
 		bool laser_ok_;
 		int create_particle_ok_;
-
-
 
 
 
