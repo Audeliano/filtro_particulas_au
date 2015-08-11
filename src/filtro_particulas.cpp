@@ -5,19 +5,32 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	n_ = n;
 	res_ = res;
 
-//	min_xy_sub_ = n.subscribe("min_xy", 4000, &Filtro_Particulas::coordxCallback, this);
-//	max_xy_sub_ = n.subscribe("max_xy", 4000, &Filtro_Particulas::coordyCallback, this);
 	occ_coordxy_sub_ = n.subscribe("occ_coordxy", 4000, &Filtro_Particulas::occ_coordxyCallback, this);
 	free_coordxy_sub_ = n.subscribe("free_coordxy", 4000, &Filtro_Particulas::free_coordxyCallback, this);
 	scan_sub_ = n.subscribe("scan", 10, &Filtro_Particulas::laserCallback, this);
 	odom_sub_ = n.subscribe("odom", 10, &Filtro_Particulas::odomCallback, this);
 
-	//initial_pose_pub_ = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("initialpose", 1, true);
 	initial_pose_pub_ = n.advertise<geometry_msgs::PoseStamped>("initialpose2", 1, true);
 	particle_cloud_pub_ = n.advertise<geometry_msgs::PoseArray>("particlecloudAU", 2, true);
 
-	num_part_ = 200;
+//--------------------------------------------------------------------------------//
 
+	num_part_ = 400;
+	qtdd_laser_ = 15;
+
+	passo_base = 0.015;
+	range_max_fakelaser = 5; //[m]
+	laser_noise_ = qtdd_laser_ / 2;
+
+	move_noise_ = 0.07;
+	turn_noise_ = 0.1; //5.73°
+
+	error_particles_ = 0.15;
+
+//--------------------------------------------------------------------------------//
+
+
+	num_laser = 0;
 	zerar = 0;
 	l_ = 0;
 	f_ = 0;
@@ -34,9 +47,8 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	pose_y_ = 0;
 	pose_theta_ = 0;
 	gaussian_ = 0;
-	move_noise_ = 0.1;
-	turn_noise_ = 0.1; //5.73°
-	laser_noise_ = 1;
+
+
 
 	delta_pose_.x = 0;
 	delta_pose_.y = 0;
@@ -70,7 +82,6 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	xi = 0;
 	yi = 0;
 	i = 0;
-	num_laser = 0;
 
 	occ_ok_ = false;
 	odom_ok_ = false;
@@ -82,48 +93,13 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 
 Filtro_Particulas::~Filtro_Particulas()
 {
-	//min_xy_sub_.shutdown();
-	//max_xy_sub_.shutdown();
 	occ_coordxy_sub_.shutdown();
 	free_coordxy_sub_.shutdown();
 	scan_sub_.shutdown();
 	odom_sub_.shutdown();
 	initial_pose_pub_.shutdown();
+	particle_cloud_pub_.shutdown();
 }
-
-/*
-
-void Filtro_Particulas::min_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& min_xy)
-{
-	//Carregar os valores de x dos landmarks.
-	std::vector<int>::const_iterator cx = min_xy->data.begin();
-	std::vector<int>::const_iterator cxm = min_xy->data.begin()+1;
-
-	min_x_ = *cx;
-	max_x_ = *cxm;
-
-	return;
-}
-
-void Filtro_Particulas::max_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& max_xy)
-{
-	//Carregar os valores de y dos landmarks.
-	std::vector<int>::const_iterator cy = coordy->data.begin();
-	std::vector<int>::const_iterator cym = coordy->data.begin()+1;
-
-	min_y_ = *cy;
-	max_y_ = *cym;
-
-	l_ = 0;
-
-	for(std::vector<int>::const_iterator it = coordy->data.begin()+2 ; it != coordy->data.end(); ++it){
-
-		landmarks_[l_][1] = *it;
-		l_++;
-	}
-	return;
-}
-*/
 
 void Filtro_Particulas::occ_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& occ_coordxy)
 {
@@ -160,13 +136,22 @@ void Filtro_Particulas::free_coordxyCallback (const std_msgs::Int32MultiArray::C
 void Filtro_Particulas::laserCallback (const sensor_msgs::LaserScanConstPtr& scan)
 {
 	// 1,57 / 0,006 ~ 260
+	int it = 510 / (qtdd_laser_ - 1);
 
-	laser_data_[0] = scan -> ranges[0] + gaussian(scan -> ranges[0], laser_noise_);	//+90º
-	laser_data_[1] = scan -> ranges[255] + gaussian(scan -> ranges[255], laser_noise_);	//0º
-	laser_data_[2] = scan -> ranges[510] + gaussian(scan -> ranges[510], laser_noise_);	//-90º
+	for (int laser_num = 0 ; laser_num < qtdd_laser_ ; laser_num++)
+	{
+		laser_data_[laser_num] = scan -> ranges[laser_num * it]; //+ gaussian(0.0, laser_noise_);
 
-	laser_data_[3] = scan -> ranges[127] + gaussian(scan -> ranges[127], laser_noise_);	//45º
-	laser_data_[4] = scan -> ranges[382] + gaussian(scan -> ranges[382], laser_noise_);	//-45º
+		//cout<<"laser_data_["<<laser_num<<"]: "<<laser_data_[laser_num]<<endl<<endl;
+	}
+
+
+//	laser_data_[0] = scan -> ranges[0]; //+ gaussian(0.0, laser_noise_);	//+90º
+//	laser_data_[1] = scan -> ranges[1];// + gaussian(0.0, laser_noise_);	//0º
+//	laser_data_[2] = scan -> ranges[2];// + gaussian(0.0, laser_noise_);	//-90º
+
+//	laser_data_[3] = scan -> ranges[127] + gaussian(0.0, laser_noise_);	//45º
+//	laser_data_[4] = scan -> ranges[382] + gaussian(0.0, laser_noise_);	//-45º
 
 	laser_ok_ = true;
 	//cout << laser_data_[0] << " | " << laser_data_[1] << " | " << laser_data_[2] <<endl;
@@ -174,9 +159,9 @@ void Filtro_Particulas::laserCallback (const sensor_msgs::LaserScanConstPtr& sca
 
 void Filtro_Particulas::odomCallback (const nav_msgs::OdometryConstPtr& msg)
 {
-	pose_x_ = msg->pose.pose.position.x + gaussian(msg->pose.pose.position.x, move_noise_);
-	pose_y_ = msg->pose.pose.position.y + gaussian(msg->pose.pose.position.y, move_noise_);
-	pose_theta_ = tf::getYaw(msg->pose.pose.orientation) + gaussian(tf::getYaw(msg->pose.pose.orientation), move_noise_); //em radianos
+	pose_x_ = msg->pose.pose.position.x;// + gaussian(0.0, move_noise_);
+	pose_y_ = msg->pose.pose.position.y;// + gaussian(0.0, move_noise_);
+	pose_theta_ = tf::getYaw(msg->pose.pose.orientation);// + gaussian(0.0, move_noise_); //em radianos
 
 //	cout<<"theta: "<<pose_theta_<<" ; quat: "<<quat<<endl;
 
@@ -263,7 +248,7 @@ void Filtro_Particulas::fakeLaser()
 	for (int i = 0; i < num_part_; i++)
 	{
 		//pose.theta de cada fake_laser
-		fake_laser_pose_[0].theta = (M_PI / 2.0) + particle_pose_[i].theta;
+/*		fake_laser_pose_[0].theta = (M_PI / 2.0) + particle_pose_[i].theta;
 		if(fake_laser_pose_[0].theta > M_PI)
 			fake_laser_pose_[0].theta -= 2.0 * M_PI;
 		if(fake_laser_pose_[0].theta <= - M_PI)
@@ -280,18 +265,32 @@ void Filtro_Particulas::fakeLaser()
 		//pose.x e pose.y para cada fake_laser
 		fake_laser_pose_[0].x = fake_laser_pose_[1].x = fake_laser_pose_[2].x = particle_pose_[i].x;
 		fake_laser_pose_[0].y = fake_laser_pose_[1].y = fake_laser_pose_[2].y = particle_pose_[i].y;
-
+*/
 		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[0]: \n"<< fake_laser_pose_[0]<<endl;
 		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[1]: \n"<< fake_laser_pose_[1]<<endl;
 		//cout<<"num_particle: "<<i<<" | fake_laser_pose_[2]: \n"<< fake_laser_pose_[2]<<endl;
 
 		probt = 1.0;
 
-		for(num_laser = 0 ; num_laser < 3 ; num_laser++)
+		double it = M_PI / (qtdd_laser_ - 1);
+
+		for(num_laser = 0 ; num_laser < qtdd_laser_ ; num_laser++)
 		{
-			double passo_base = 0.025;
+			fake_laser_pose_[num_laser].theta = ((M_PI / 2.0) - (num_laser * it)) + particle_pose_[i].theta;
+			if(fake_laser_pose_[num_laser].theta > M_PI)
+				fake_laser_pose_[num_laser].theta -= 2.0 * M_PI;
+			if(fake_laser_pose_[num_laser].theta <= - M_PI)
+				fake_laser_pose_[num_laser].theta += 2.0 * M_PI;
+
+			fake_laser_pose_[num_laser].x = particle_pose_[i].x;
+			fake_laser_pose_[num_laser].y = particle_pose_[i].y;
+		}
+
+		for(num_laser = 0 ; num_laser < qtdd_laser_ ; num_laser++)
+		{
 			passo = 0;
-			int iteracao = 280; // 7 metros
+			int iteracao = range_max_fakelaser / passo_base;
+
 			for(int p = 1; p <= iteracao; p++)
 			{
 				//varredura do fake_laser
@@ -312,7 +311,7 @@ void Filtro_Particulas::fakeLaser()
 					findObstacle(xi, yi);
 					if (obstacle_finded_ == true){
 						fake_laser_data_[i][num_laser] = obstacle_;
-						//weight_part_laser_[i][num_laser] = passo;// += gaussian(passo, laser_noise_);
+						//weight_part_laser_[i][num_laser] = passo;// += gaussian(0.0, laser_noise_);
 
 						//cout<<"Dist-> Particula: "<<i<<" ; num_laser: "<<num_laser<<" ; passo: "<<weight_part_laser_[i][num_laser]<<endl;
 						p = iteracao;
@@ -473,12 +472,15 @@ void Filtro_Particulas::moveParticles()
 			if(particle_pose_[p].theta <= - M_PI)
 				particle_pose_[p].theta += 2.0 * M_PI;
 
-
 			//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p]<<endl;
 			//usleep(150000);
 			//cout<<"MoveParticle: "<<p<<" | x: "<<particle_pose_[p].x<<" ; y: "<<particle_pose_[p].y<<" ; theta: "<<particle_pose_[p].theta<<endl;
 
 		}
+		//cout<<"Deltas_pose: "<<delta_pose_.x<<" | "<<delta_pose_.y<<" | "<<delta_pose_.theta<<endl;
+		//cout<<"Gaussians(move e turn): "<<gaussian(0.0, move_noise_)<<" | "<<gaussian(0.0, turn_noise_)<<endl;
+		//usleep(250000);
+
 		//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p-1]<<endl;
 		//cout<<"moveParticulas"<<endl;
 	}
@@ -528,7 +530,7 @@ void Filtro_Particulas::pubInicialPose()
 	//initial_pose_.pose.pose.orientation = odom_quat_;
 
 	//initial_pose_pub_.publish(initial_pose_);
-	if(sum < 0.25)
+	if(sum < error_particles_)
 	{
 		initial_pose2_.pose.position.x = xmedia;
 		initial_pose2_.pose.position.y = ymedia;
@@ -574,41 +576,21 @@ void Filtro_Particulas::spin()
 	{
 		ros::spinOnce();
 		loopRate.sleep();
-		//readLandmarks();
-		cout<<free_ok_<<occ_ok_<<odom_ok_<<laser_ok_<<endl;
-		if (odom_ok_ == true && laser_ok_ == true){
 
+		cout<<free_ok_<<occ_ok_<<odom_ok_<<laser_ok_<<endl;
+		if (free_ok_ == true && occ_ok_ == true && odom_ok_ == true && laser_ok_ == true){
 			createParticles();
 			if(create_particle_ok_ == 0){
-
 				fakeLaser();
 				//cout<<"fakeLaser()"<<endl;
-				resample();
-				//cout<<"resample()"<<endl;
 				cloud();
-
-				pubInicialPose();
-
-				//cout<<"pubinitialPose()"<<endl;
 				moveParticles();
 				//cout<<"moveParticles()"<<endl;
-
+				resample();
+				//cout<<"resample()"<<endl;
+				pubInicialPose();
+				//cout<<"pubinitialPose()"<<endl;
 			}
 		}
-		//gaussian(0.0, 1.0);
-
-		//gaussian(0.0, 2.0);
-		//gaussian(1.1, laser_noise_, 1.0);
-
-		//gaussian(1.8, laser_noise_, 2.0);
-		//gaussian(2.2, laser_noise_, 2.0);
-
-		//gaussian(0.0, laser_noise_, 1.0);
-		//gaussian(0.50, laser_noise_, 1.0);
-		//gaussian(2.4, laser_noise_, 3.0);
-		//gaussian(3.6, laser_noise_, 3.0);
-
-		//usleep(250000);
-
 	}
 }

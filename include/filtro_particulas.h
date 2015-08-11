@@ -69,6 +69,10 @@ class Filtro_Particulas
 		double res_;
 
 		int num_part_;
+		int qtdd_laser_;
+		double passo_base;
+		int range_max_fakelaser; //[m]
+		double error_particles_;
 
 		nav_msgs::Odometry odometry_;
 
@@ -130,8 +134,8 @@ class Filtro_Particulas
 		//int delta_y_;
 		//int delta_theta_;
 
-		double laser_data_[3];
-		geometry_msgs::Pose2D fake_laser_pose_[3];
+		double laser_data_[1000];
+		geometry_msgs::Pose2D fake_laser_pose_[1000];
 		double pose_x_;
 		double pose_y_;
 		double pose_theta_;
