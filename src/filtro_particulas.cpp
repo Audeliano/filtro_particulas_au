@@ -10,19 +10,20 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	scan_sub_ = n.subscribe("scan", 10, &Filtro_Particulas::laserCallback, this);
 	odom_sub_ = n.subscribe("odom", 10, &Filtro_Particulas::odomCallback, this);
 
-	initial_pose_pub_ = n.advertise<geometry_msgs::PoseStamped>("initialpose2", 1, true);
+	initial_pose_pub_ = n.advertise<geometry_msgs::Pose2D>("initialpose2", 1, true);
 	particle_cloud_pub_ = n.advertise<geometry_msgs::PoseArray>("particlecloudAU", 2, true);
 
 //--------------------------------------------------------------------------------//
 
-	num_part_ = 400;
-	qtdd_laser_ = 15;
+	num_part_ = 300;
+	qtdd_laser_ = 101;
 
 	passo_base = 0.015;
 	range_max_fakelaser = 5; //[m]
 	laser_noise_ = qtdd_laser_ / 2;
 
-	move_noise_ = 0.07;
+	laser_data_noise_ = 0.05;
+	move_noise_ = 0.05;
 	turn_noise_ = 0.1; //5.73°
 
 	error_particles_ = 0.15;
@@ -31,6 +32,7 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 
 
 	num_laser = 0;
+	ang_max_ = 0;
 	zerar = 0;
 	l_ = 0;
 	f_ = 0;
@@ -136,12 +138,12 @@ void Filtro_Particulas::free_coordxyCallback (const std_msgs::Int32MultiArray::C
 void Filtro_Particulas::laserCallback (const sensor_msgs::LaserScanConstPtr& scan)
 {
 	// 1,57 / 0,006 ~ 260
+	ang_max_ = scan -> angle_max;
 	int it = 510 / (qtdd_laser_ - 1);
 
 	for (int laser_num = 0 ; laser_num < qtdd_laser_ ; laser_num++)
 	{
-		laser_data_[laser_num] = scan -> ranges[laser_num * it]; //+ gaussian(0.0, laser_noise_);
-
+		laser_data_[laser_num] = scan -> ranges[laser_num * it] + (scan -> ranges[laser_num * it] * gaussian(0.0, laser_data_noise_));
 		//cout<<"laser_data_["<<laser_num<<"]: "<<laser_data_[laser_num]<<endl<<endl;
 	}
 
@@ -276,7 +278,7 @@ void Filtro_Particulas::fakeLaser()
 
 		for(num_laser = 0 ; num_laser < qtdd_laser_ ; num_laser++)
 		{
-			fake_laser_pose_[num_laser].theta = ((M_PI / 2.0) - (num_laser * it)) + particle_pose_[i].theta;
+			fake_laser_pose_[num_laser].theta = ((ang_max_) - (num_laser * it)) + particle_pose_[i].theta;
 			if(fake_laser_pose_[num_laser].theta > M_PI)
 				fake_laser_pose_[num_laser].theta -= 2.0 * M_PI;
 			if(fake_laser_pose_[num_laser].theta <= - M_PI)
@@ -464,9 +466,9 @@ void Filtro_Particulas::moveParticles()
 	if(delta_pose_.x != 0 || delta_pose_.y != 0 || delta_pose_.theta != 0){
 		for(p = 0; p < num_part_; p++)
 		{
-			particle_pose_[p].x += delta_pose_.x + gaussian(0.0, move_noise_);
-			particle_pose_[p].y += delta_pose_.y + gaussian(0.0, move_noise_);
-			particle_pose_[p].theta += delta_pose_.theta + gaussian(0.0, turn_noise_);
+			particle_pose_[p].x += delta_pose_.x + (delta_pose_.x * gaussian(0.0, move_noise_));
+			particle_pose_[p].y += delta_pose_.y + (delta_pose_.y * gaussian(0.0, move_noise_));
+			particle_pose_[p].theta += delta_pose_.theta; //+ gaussian(0.0, turn_noise_);
 			if(particle_pose_[p].theta > M_PI)
 				particle_pose_[p].theta -= 2.0 * M_PI;
 			if(particle_pose_[p].theta <= - M_PI)
@@ -532,9 +534,9 @@ void Filtro_Particulas::pubInicialPose()
 	//initial_pose_pub_.publish(initial_pose_);
 	if(sum < error_particles_)
 	{
-		initial_pose2_.pose.position.x = xmedia;
-		initial_pose2_.pose.position.y = ymedia;
-		initial_pose2_.pose.position.z = thetamedia;
+		initial_pose2_.x = xmedia;
+		initial_pose2_.y = ymedia;
+		initial_pose2_.theta = thetamedia;
 
 		initial_pose_pub_.publish(initial_pose2_);
 

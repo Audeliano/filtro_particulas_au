@@ -90,7 +90,7 @@ class Filtro_Particulas
 		geometry_msgs::Pose2D particle_pose_[10000];
 		geometry_msgs::Pose2D particle_resample_[10000];
 		geometry_msgs::PoseWithCovarianceStamped initial_pose_;
-		geometry_msgs::PoseStamped initial_pose2_;
+		geometry_msgs::Pose2D initial_pose2_;
 		//geometry_msgs::Quaternion odom_quat_;
 
 		int landmarks_[4000][2];
@@ -135,6 +135,7 @@ class Filtro_Particulas
 		//int delta_theta_;
 
 		double laser_data_[1000];
+		double ang_max_;
 		geometry_msgs::Pose2D fake_laser_pose_[1000];
 		double pose_x_;
 		double pose_y_;
@@ -144,6 +145,7 @@ class Filtro_Particulas
 		double move_noise_;
 		double turn_noise_;
 		double laser_noise_;
+		double laser_data_noise_;
 		int size_occ_coordxy_;
 		double weight_part_laser_[10000][3];
 		double weight_part_[10000];
