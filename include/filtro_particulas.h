@@ -156,6 +156,7 @@ class Filtro_Particulas
 		bool occ_ok_;
 		bool odom_ok_;
 		bool laser_ok_;
+		bool zerar_deltas_;
 		int create_particle_ok_;
 
 
