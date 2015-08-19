@@ -1,6 +1,6 @@
 <launch>
 
-	<node name="map_server" pkg="map_server" type="map_server" args="/home/au/catkin_ws/maps/labirinto.yaml"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find filtro_particulas)/maps/labirinto.yaml"/>
 	
 
 	<!-- node pkg="filtro_particulas" type="filtro_particulas" name="filtro_particulas_node"/-->
