@@ -26,6 +26,8 @@
 #include "sensor_msgs/LaserScan.h"
 #include "tf/tf.h"
 
+#define sign(a) (((a) < 0) ? -1 : (((a) > 0) ? 1 : 0))
+
 using namespace std;
 
 class Filtro_Particulas
@@ -93,6 +95,9 @@ class Filtro_Particulas
 		geometry_msgs::Pose2D initial_pose2_;
 		//geometry_msgs::Quaternion odom_quat_;
 
+		double arctan_;
+		double hipot_;
+		double freq_;
 		int landmarks_[4000][2];
 		int landmarks_xy_[4000];
 		int free_xy_[40000];
@@ -117,6 +122,7 @@ class Filtro_Particulas
 		int rand_xy;
 		double pose_x;
 		double pose_y;
+		double twist_x_;
 
 		double x;
 		double y;
@@ -135,7 +141,7 @@ class Filtro_Particulas
 		//int delta_theta_;
 
 		double laser_data_[1000];
-		double ang_max_;
+		double ang_min_;
 		geometry_msgs::Pose2D fake_laser_pose_[1000];
 		double pose_x_;
 		double pose_y_;

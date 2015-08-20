@@ -14,25 +14,28 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	particle_cloud_pub_ = n.advertise<geometry_msgs::PoseArray>("particlecloudAU", 2, true);
 
 //--------------------------------------------------------------------------------//
+	freq_ = 10.0;
 
-	num_part_ = 500;
-	qtdd_laser_ = 31;
+	num_part_ = 300;
+	qtdd_laser_ = 151;
 
 	passo_base = 0.025;
 	range_max_fakelaser = 7; //[m]
 	laser_noise_ = qtdd_laser_;
 
 	laser_data_noise_ = 0.05;
-	move_noise_ = 0.03;
-	turn_noise_ = 0.03; //0.1 rad = 5.73°
+	move_noise_ = 0.05;//0.03;
+	turn_noise_ = 0.1;//0.03; //0.1 rad = 5.73°
 
-	error_particles_ = 0.45; //~dist de 0.3 da particula da media
+	error_particles_ = 0.45; //0.45 ~ dist de 0.3 da particula da media
 
 //--------------------------------------------------------------------------------//
 
 
+	arctan_ = 0.0;
+	hipot_ = 0.0;
 	num_laser = 0;
-	ang_max_ = 0;
+	ang_min_ = 0;
 	zerar = 0;
 	l_ = 0;
 	f_ = 0;
@@ -50,7 +53,7 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	pose_theta_ = 0;
 	gaussian_ = 0;
 
-
+	twist_x_ = 0.0;
 
 	delta_pose_.x = 0;
 	delta_pose_.y = 0;
@@ -139,20 +142,46 @@ void Filtro_Particulas::free_coordxyCallback (const std_msgs::Int32MultiArray::C
 void Filtro_Particulas::laserCallback (const sensor_msgs::LaserScanConstPtr& scan)
 {
 	// 1,57 / 0,006 ~ 260
-	ang_max_ = scan -> angle_max;
-	int it = 510 / (qtdd_laser_ - 1);
+	ang_min_ = scan -> angle_min;
+	int it = (scan->ranges.size() - 1) / (qtdd_laser_ - 1);
+
+	//scan->ranges.size();
+	//cout<<scan->ranges.size()<<endl;
 
 	for (int laser_num = 0 ; laser_num < qtdd_laser_ ; laser_num++)
 	{
-		if(isnan(scan -> ranges[laser_num * it]))
-			laser_data_[laser_num] = scan->range_min;
+		if(scan -> ranges[laser_num * it] >= scan->range_min && scan -> ranges[laser_num * it] <= scan->range_max)
+		{
+			laser_data_[laser_num] = scan -> ranges[laser_num * it];
+			//cout<<"LaserData:  "<<laser_num<<" = "<<laser_data_[laser_num]<<endl;
+		}
+		else
+		{
+			laser_data_[laser_num] = -1;
+			//cout<<"DEU NAN OU INF!!!!  "<<laser_num<<" = "<<laser_data_[laser_num]<<endl;
+		}
+
+/*		if( isnan(scan -> ranges[laser_num * it]))
+		{
+			cout<<laser_data_[laser_num]<<endl;
+			if(laser_data_[laser_num] < 5.6){
+				laser_data_[laser_num] = 10.0;}//scan->range_min;}
+
+			cout<<"Part ["<<laser_num<<"] isnan!!!! Laser_data: "<<laser_data_[laser_num]<<endl<<endl;
+		}
 		else laser_data_[laser_num] = scan -> ranges[laser_num * it];
 
 		if(isinf(scan -> ranges[laser_num * it]))
+		{
+			cout<<laser_data_[laser_num]<<endl;
 			laser_data_[laser_num] = scan->range_max;
+			cout<<"Part ["<<laser_num<<"] isinf!!!! Laser_data: "<<laser_data_[laser_num]<<endl<<endl;
+		}
 		else laser_data_[laser_num] = scan -> ranges[laser_num * it]; //+ (scan -> ranges[laser_num * it] * gaussian(0.0, laser_data_noise_));
 		//cout<<"laser_data_["<<laser_num<<"]: "<<laser_data_[laser_num]<<endl<<endl;
+*/
 	}
+	//cout<<endl;
 
 	laser_ok_ = true;
 	//cout << laser_data_[0] << " | " << laser_data_[1] << " | " << laser_data_[2] <<endl;
@@ -163,6 +192,9 @@ void Filtro_Particulas::odomCallback (const nav_msgs::OdometryConstPtr& msg)
 	pose_x_ = msg->pose.pose.position.x;// + gaussian(0.0, move_noise_);
 	pose_y_ = msg->pose.pose.position.y;// + gaussian(0.0, move_noise_);
 	pose_theta_ = tf::getYaw(msg->pose.pose.orientation);// + gaussian(0.0, move_noise_); //em radianos
+
+	twist_x_ = msg->twist.twist.linear.x;
+	//cout<<"TWIST: "<<twist_x_<<endl;
 
 //	cout<<"theta: "<<pose_theta_<<" ; quat: "<<quat<<endl;
 
@@ -183,6 +215,22 @@ void Filtro_Particulas::createParticles()
 		pose_x = 0;
 		pose_y = 0;
 
+
+/*			rand_xy = rand() % num_free_; //random de 0 a num_free_
+
+			pose_x = 12.0;//(free_xy_[rand_xy])/10000; //separa x de y
+			pose_y = 38.0;//(free_xy_[rand_xy])%10000;
+
+			single_pose_.x = pose_x * res_ ; //1 pixel -> 0.05m
+			single_pose_.y = pose_y * res_;
+			//single_pose_.theta = (rand() % 360 + 0) - 180; //em graus
+			single_pose_.theta = 0; //em radianos
+
+			particle_pose_[0] = single_pose_;
+
+			//cout<<"x: "<<single_pose_.x<<" ; y: "<<single_pose_.y<<" ; theta: "<<single_pose_.theta<<endl;
+			//cout<<"particle_pose["<<i<<"]:\n"<<particle_pose_[i]<<endl;
+*/
 
 		for (int i = 0; i < num_part_; i++)
 		{
@@ -249,13 +297,14 @@ void Filtro_Particulas::fakeLaser()
 
 	for (int i = 0; i < num_part_; i++)
 	{
-		probt = 1.0;
+		//probt = 1.0;
+		probt = 0.0;
 
 		double it = M_PI / (qtdd_laser_ - 1);
 
 		for(num_laser = 0 ; num_laser < qtdd_laser_ ; num_laser++)
 		{
-			fake_laser_pose_[num_laser].theta = ((ang_max_) - (num_laser * it)) + particle_pose_[i].theta;
+			fake_laser_pose_[num_laser].theta = ((ang_min_) + (num_laser * it)) + particle_pose_[i].theta;
 			if(fake_laser_pose_[num_laser].theta > M_PI)
 				fake_laser_pose_[num_laser].theta -= 2.0 * M_PI;
 			if(fake_laser_pose_[num_laser].theta <= - M_PI)
@@ -304,14 +353,19 @@ void Filtro_Particulas::fakeLaser()
 			//cout<<"Part["<<i<<"]["<<num_laser<<"] = "<<passo<<" | laser_data["<<num_laser<<"] = "<<laser_data_[num_laser]<<endl;
 			//usleep(100000);
 
-			measurementProb(i,num_laser);
+			if(laser_data_[num_laser] > 0)
+				measurementProb(i,num_laser);
+			//else cout<<"Valores NAN e INF nao entram no measurementProb!!! Part: "<<num_part_<<"  Laser: "<<num_laser<<endl;
 			//cout<<"Dist-> Particula: "<<i<<" ; num_laser: "<<num_laser<<" ; passo: "<<weight_part_laser_[i][num_laser]<<endl;
 			//usleep(100000);
 			//cout<<"Dist-> Particula: "<<i<<" ; num_laser: "<<num_laser<<" ; passo: "<<weight_part_laser_[i][num_laser]<<endl;
 			//cout<<"fake_laser_data_["<<i<<"]"<<"["<<num_laser<<"]: "<<fake_laser_data_[i][num_laser]<<endl;
 		}
 		//cout<<"\n"<<endl;
+		probt = 1/probt;
+
 		weight_part_[i] = probt;
+
 		total += weight_part_[i];
 		//cout<<"weight_part_"<<i<<" | probt: "<<probt<<endl;
 		//usleep(25000);
@@ -350,7 +404,9 @@ double Filtro_Particulas::findObstacle(double x, double y)
 
 double Filtro_Particulas::measurementProb(int particleMP, int laserMP)
 {
-	probt *= gaussian(weight_part_laser_[particleMP][laserMP], laser_noise_, laser_data_[laserMP]);
+	probt +=  fabs(weight_part_laser_[particleMP][laserMP] - laser_data_[laserMP]);
+
+	//probt *= gaussian(laser_data_[laserMP], laser_noise_, weight_part_laser_[particleMP][laserMP]);
 	//usleep(250000);
 	//cout<<"laser_virtual_["<<particleMP<<"]["<<laserMP<<"]: "<<weight_part_laser_[particleMP][laserMP]<<" | "<<laser_noise_<<" | "<<laser_data_[laserMP]<<" | prob: "<<probt<<endl;
 	//cout<<"Particula: "<<p<<" | Num_laser: "<<l<<" ; Data: "<<laser_data_[l]<<" | Peso: "<<weight_part_laser_[p][l]<<endl;
@@ -423,7 +479,12 @@ void Filtro_Particulas::moveParticles()
 	delta_pose_.x = pose_x_ - pose_anterior_.x;
 	delta_pose_.y = pose_y_ - pose_anterior_.y;
 	delta_pose_.theta = pose_theta_ - pose_anterior_.theta;
-	//cout<<"delta_pose.x: "<<delta_pose_.x<<" ; delta_pose_.y: "<<delta_pose_.y<<" ; delta_pose_.theta: "<<delta_pose_.theta<<endl;
+	hipot_ = sqrt((delta_pose_.x * delta_pose_.x) + (delta_pose_.y * delta_pose_.y));
+	arctan_ = atan(delta_pose_.y / delta_pose_.x);
+
+	//cout<<"pose_x_: "<<pose_x_<<" ; pose_y_: "<<pose_y_<<" ; pose_theta_: "<<pose_theta_<<endl;
+	//cout<<"pose_anterior_.x: "<<pose_anterior_.x<<" ; pose_anterior_.y: "<<pose_anterior_.y<<" ; pose_anterior_.theta: "<<pose_anterior_.theta<<endl;
+	//cout<<"delta_pose.x: "<<delta_pose_.x<<" ; delta_pose_.y: "<<delta_pose_.y<<" ; delta_pose_.theta: "<<delta_pose_.theta<<endl<<endl;
 
 	pose_anterior_.x = pose_x_;
 	pose_anterior_.y = pose_y_;
@@ -433,23 +494,47 @@ void Filtro_Particulas::moveParticles()
 	int p = 0;
 	if(delta_pose_.x != 0 || delta_pose_.y != 0 || delta_pose_.theta != 0){
 		//cout<<"deltas != 0"<<endl;
+
+		//cout<<"pose_x_: "<<pose_x_<<" ; pose_y_: "<<pose_y_<<" ; pose_theta_: "<<pose_theta_<<endl;
+		//cout<<"pose_anterior_.x: "<<pose_anterior_.x<<" ; pose_anterior_.y: "<<pose_anterior_.y<<" ; pose_anterior_.theta: "<<pose_anterior_.theta<<endl;
+		//cout<<"delta_pose.x: "<<delta_pose_.x<<" ; delta_pose_.y: "<<delta_pose_.y<<" ; delta_pose_.theta: "<<delta_pose_.theta<<endl<<endl;
+
 		for(p = 0; p < num_part_; p++)
 		{
-			particle_pose_[p].x += delta_pose_.x + gaussian(0.0, move_noise_); //(delta_pose_.x * gaussian(0.0, move_noise_));
-			particle_pose_[p].y += delta_pose_.y + gaussian(0.0, move_noise_); //(delta_pose_.y * gaussian(0.0, move_noise_));
+			particle_pose_[p].x += sign(twist_x_) * hipot_ * cos(particle_pose_[p].theta) + gaussian(0.0, move_noise_);
+			particle_pose_[p].y += sign(twist_x_) * hipot_ * sin(particle_pose_[p].theta) + gaussian(0.0, move_noise_);
+
+			//particle_pose_[p].x += delta_pose_.x; //+ gaussian(0.0, move_noise_);
+			//particle_pose_[p].y += delta_pose_.y; //+ gaussian(0.0, move_noise_);
+
+			//(twist_x_*cos(particle_pose_[p].theta)) + gaussian(0.0, move_noise_);// - (delta_pose_.y * sin(particle_pose_[p].theta))
+			//(twist_x_*sin(particle_pose_[p].theta)) + gaussian(0.0, move_noise_);// + (delta_pose_.y * cos(particle_pose_[p].theta))
+
+			//cout<<"sx: "<<sign(delta_pose_.x)<<" | sy: "<<sign(delta_pose_.y)<<endl;
+
+			//cout<<"cos: "<<cos(particle_pose_[p].theta)<<" | sen: "<<sin(particle_pose_[p].theta)<<endl;
+			//cout<<"N_Part: "<<p<<" | Theta: "<<(particle_pose_[p].theta)*180.0/M_PI<<" | cos: "<<cos(particle_pose_[p].theta)<<" | sen: "<<sin(particle_pose_[p].theta)<<endl;
+
 			particle_pose_[p].theta += delta_pose_.theta + gaussian(0.0, turn_noise_); //(delta_pose_.theta * gaussian(0.0, turn_noise_));
+
 			if(particle_pose_[p].theta > M_PI)
 				particle_pose_[p].theta -= 2.0 * M_PI;
 			if(particle_pose_[p].theta <= - M_PI)
 				particle_pose_[p].theta += 2.0 * M_PI;
 
+
+			//cout<<"twist: "<<twist_x_<<endl;
 			//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p]<<endl;
 			//usleep(150000);
 			//cout<<"MoveParticle: "<<p<<" | x: "<<particle_pose_[p].x<<" ; y: "<<particle_pose_[p].y<<" ; theta: "<<particle_pose_[p].theta<<endl;
+			//cout<<"delta_pose.x: "<<delta_pose_.x<<" ; delta_pose_.y: "<<delta_pose_.y<<" ; delta_pose_.theta: "<<delta_pose_.theta<<endl<<endl;
+
 
 		}
+		//cout<<endl;
+		//cout<<"MoveParticle: "<<p-1<<" | x: "<<particle_pose_[p-1].x<<" ; y: "<<particle_pose_[p-1].y<<" ; theta: "<<particle_pose_[p-1].theta<<endl;
 		//cout<<"Deltas_pose: "<<delta_pose_.x<<" | "<<delta_pose_.y<<" | "<<delta_pose_.theta<<endl;
-		//cout<<"Gaussians(move e turn): "<<gaussian(0.0, move_noise_)<<" | "<<gaussian(0.0, turn_noise_)<<endl;
+		//cout<<"Gaussians(move e turn): "<<gaussian(0.0, move_noise_)<<" | "<<gaussian(0.0, turn_noise_)<<endl<<endl;
 		//usleep(250000);
 
 		//cout<<"particle_pose["<<p<<"]:\n"<<particle_pose_[p-1]<<endl;
@@ -467,25 +552,46 @@ void Filtro_Particulas::moveParticles()
 
 void Filtro_Particulas::pubInicialPose()
 {
-	double xmedia = 0;
-	double ymedia = 0;
-	double thetamedia = 0;
+	double xmedia = 0.0;
+	double ymedia = 0.0;
+	double thetamedia = 0.0;
+	double thetapos = 0.0;
+	double thetaneg = 0.0;
+	int pos = 0;
+	int neg = 0;
 	sum = 0.0;
 
 	for (int i = 0; i < num_part_ ; i++)
 	{
 		xmedia += particle_pose_[i].x;
 		ymedia += particle_pose_[i].y;
-		thetamedia += particle_pose_[i].theta;
-		if(thetamedia > M_PI)
-			thetamedia -= 2.0 * M_PI;
-		if(thetamedia <= - M_PI)
-			thetamedia += 2.0 * M_PI;
+		thetamedia = particle_pose_[i].theta;
+
+		if(thetamedia < 0.0)
+		{
+			neg++;
+			thetaneg += particle_pose_[i].theta;
+		}else
+		{
+			pos++;
+			thetapos += particle_pose_[i].theta;
+		}
+
+
 	}
 
 	xmedia = xmedia / (double)num_part_;
 	ymedia = ymedia / (double)num_part_;
+	if (neg > pos)
+	{
+		thetaneg = thetaneg / neg;
+	}
+
 	thetamedia = thetamedia / (double)num_part_;
+	if(thetamedia > M_PI)
+		thetamedia -= 2.0 * M_PI;
+	if(thetamedia <= - M_PI)
+		thetamedia += 2.0 * M_PI;
 
 	for (int i = 0; i < num_part_ ; i++)
 	{
@@ -509,6 +615,7 @@ void Filtro_Particulas::pubInicialPose()
 		initial_pose2_.theta = thetamedia;
 
 		initial_pose_pub_.publish(initial_pose2_);
+		cout<<"x: "<<xmedia<<" | y: "<<ymedia<<" | theta: "<<thetamedia<<endl;
 
 		zerar++;
 		if(zerar > 10)
@@ -537,13 +644,13 @@ void Filtro_Particulas::cloud()
 
 void Filtro_Particulas::spin()
 {
-	ros::Rate loopRate(10);
+	ros::Rate loopRate(freq_);
 	while(n_.ok())
 	{
 		ros::spinOnce();
 		loopRate.sleep();
 
-		cout<<free_ok_<<occ_ok_<<odom_ok_<<laser_ok_<<endl;
+		//cout<<free_ok_<<occ_ok_<<odom_ok_<<laser_ok_<<endl;
 		if (free_ok_ == true && occ_ok_ == true){
 			createParticles();
 			if(create_particle_ok_ == 0  && odom_ok_ == true && laser_ok_ == true && zerar_deltas_ == false){
@@ -557,6 +664,7 @@ void Filtro_Particulas::spin()
 				//cout<<"moveParticles()"<<endl;
 			}else if(create_particle_ok_ == 0  && odom_ok_ == true && laser_ok_ == true && zerar_deltas_ == true){
 				moveParticles();
+
 			}
 		}
 	}
