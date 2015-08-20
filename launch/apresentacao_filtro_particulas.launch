@@ -1,0 +1,11 @@
+<launch>
+
+	<include file="$(find filtro_particulas)/launch/teste_na_mao.launch" />
+
+	<!--include file="$(find filtro_particulas)/launch/labirinto.launch" /-->		
+
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find filtro_particulas)/rviz/filtro_particulas.rviz" />
+
+	<node pkg="rosaria_teleop" type="rosaria_teleop" name="rosaria_teleop" />
+
+</launch>

@@ -10,24 +10,24 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	scan_sub_ = n.subscribe("scan", 10, &Filtro_Particulas::laserCallback, this);
 	odom_sub_ = n.subscribe("odom", 10, &Filtro_Particulas::odomCallback, this);
 
-	initial_pose_pub_ = n.advertise<geometry_msgs::Pose2D>("initialpose2", 1, true);
+	initial_pose_pub_ = n.advertise<geometry_msgs::Pose2D>("filterparticlepose", 1, true);
 	particle_cloud_pub_ = n.advertise<geometry_msgs::PoseArray>("particlecloudAU", 2, true);
 
 //--------------------------------------------------------------------------------//
 	freq_ = 10.0;
 
-	num_part_ = 300;
-	qtdd_laser_ = 151;
+	num_part_ = 400;
+	qtdd_laser_ = 101;
 
 	passo_base = 0.025;
 	range_max_fakelaser = 7; //[m]
 	laser_noise_ = qtdd_laser_;
 
 	laser_data_noise_ = 0.05;
-	move_noise_ = 0.05;//0.03;
+	move_noise_ = 0.07;//0.03;
 	turn_noise_ = 0.1;//0.03; //0.1 rad = 5.73°
 
-	error_particles_ = 0.45; //0.45 ~ dist de 0.3 da particula da media
+	error_particles_ = 0.25; //0.45 ~ dist de 0.3m da particula (na media) ; 0.28 ~ 0.2m
 
 //--------------------------------------------------------------------------------//
 
@@ -557,8 +557,8 @@ void Filtro_Particulas::pubInicialPose()
 	double thetamedia = 0.0;
 	double thetapos = 0.0;
 	double thetaneg = 0.0;
-	int pos = 0;
-	int neg = 0;
+	double pos = 0.0;
+	double neg = 0.0;
 	sum = 0.0;
 
 	for (int i = 0; i < num_part_ ; i++)
@@ -585,9 +585,12 @@ void Filtro_Particulas::pubInicialPose()
 	if (neg > pos)
 	{
 		thetaneg = thetaneg / neg;
+		thetamedia = thetaneg;
+	}else{
+		thetapos = thetapos / pos;
+		thetamedia = thetapos;
 	}
 
-	thetamedia = thetamedia / (double)num_part_;
 	if(thetamedia > M_PI)
 		thetamedia -= 2.0 * M_PI;
 	if(thetamedia <= - M_PI)
