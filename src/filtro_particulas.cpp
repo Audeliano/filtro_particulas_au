@@ -14,12 +14,12 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	particle_cloud_pub_ = n.advertise<geometry_msgs::PoseArray>("particlecloudAU", 2, true);
 
 //--------------------------------------------------------------------------------//
-	freq_ = 10.0;
+	freq_ = 20.0;
 
-	num_part_ = 400;
-	qtdd_laser_ = 101;
+	num_part_ = 200;
+	qtdd_laser_ = 51;
 
-	passo_base = 0.025;
+	passo_base = 0.05;//0.025;
 	range_max_fakelaser = 7; //[m]
 	laser_noise_ = qtdd_laser_;
 
@@ -27,16 +27,16 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	move_noise_ = 0.07;//0.03;
 	turn_noise_ = 0.1;//0.03; //0.1 rad = 5.73°
 
-	error_particles_ = 0.25; //0.45 ~ dist de 0.3m da particula (na media) ; 0.28 ~ 0.2m
+	error_particles_ = 0.14; //0.45 ~ dist de 0.3m da particula (na media) ; 0.28 ~ 0.2m; 0.14 ~ 0.1m
 
 //--------------------------------------------------------------------------------//
 
-
+	reduz_gauss_ = 1.0;
 	arctan_ = 0.0;
 	hipot_ = 0.0;
 	num_laser = 0;
 	ang_min_ = 0;
-	zerar = 0;
+	convergiu_ = 0;
 	l_ = 0;
 	f_ = 0;
 	min_x_ = 10000;
@@ -77,6 +77,7 @@ Filtro_Particulas::Filtro_Particulas(ros::NodeHandle n, double res)
 	probt = 0;
 	passo = 0;
 	sum = 0;
+	index_max_w_ = 0;
 
 	rand_xy = 0;
 	pose_x = 0;
@@ -289,12 +290,6 @@ void Filtro_Particulas::fakeLaser()
 	achou = 0;
 	total = 0;
 
-	if(cont >= 30)
-	{
-		//create_particle_ok_ = 1;
-		cont = 0;
-	}
-
 	for (int i = 0; i < num_part_; i++)
 	{
 		//probt = 1.0;
@@ -429,6 +424,7 @@ void Filtro_Particulas::resample()
 
 		if(weight_part_[n] > max_w){
 			max_w = weight_part_[n];
+			index_max_w_ = n;
 			//cout<<"max_w: "<<max_w<<endl;
 			//cout<<"weight_part_ "<<n<<" : "<<weight_part_[n]<<" Particle_pose-> x: "<<particle_pose_[n].x<<" y: "<<particle_pose_[n].y<<" theta: "<<particle_pose_[n].theta<<endl;
 			//usleep(200000);
@@ -501,8 +497,8 @@ void Filtro_Particulas::moveParticles()
 
 		for(p = 0; p < num_part_; p++)
 		{
-			particle_pose_[p].x += sign(twist_x_) * hipot_ * cos(particle_pose_[p].theta) + gaussian(0.0, move_noise_);
-			particle_pose_[p].y += sign(twist_x_) * hipot_ * sin(particle_pose_[p].theta) + gaussian(0.0, move_noise_);
+			particle_pose_[p].x += sign(twist_x_) * hipot_ * cos(particle_pose_[p].theta) + (gaussian(0.0, move_noise_) / reduz_gauss_);
+			particle_pose_[p].y += sign(twist_x_) * hipot_ * sin(particle_pose_[p].theta) + (gaussian(0.0, move_noise_) / reduz_gauss_);
 
 			//particle_pose_[p].x += delta_pose_.x; //+ gaussian(0.0, move_noise_);
 			//particle_pose_[p].y += delta_pose_.y; //+ gaussian(0.0, move_noise_);
@@ -515,7 +511,7 @@ void Filtro_Particulas::moveParticles()
 			//cout<<"cos: "<<cos(particle_pose_[p].theta)<<" | sen: "<<sin(particle_pose_[p].theta)<<endl;
 			//cout<<"N_Part: "<<p<<" | Theta: "<<(particle_pose_[p].theta)*180.0/M_PI<<" | cos: "<<cos(particle_pose_[p].theta)<<" | sen: "<<sin(particle_pose_[p].theta)<<endl;
 
-			particle_pose_[p].theta += delta_pose_.theta + gaussian(0.0, turn_noise_); //(delta_pose_.theta * gaussian(0.0, turn_noise_));
+			particle_pose_[p].theta += delta_pose_.theta + (gaussian(0.0, turn_noise_) / reduz_gauss_); //(delta_pose_.theta * gaussian(0.0, turn_noise_));
 
 			if(particle_pose_[p].theta > M_PI)
 				particle_pose_[p].theta -= 2.0 * M_PI;
@@ -576,8 +572,6 @@ void Filtro_Particulas::pubInicialPose()
 			pos++;
 			thetapos += particle_pose_[i].theta;
 		}
-
-
 	}
 
 	xmedia = xmedia / (double)num_part_;
@@ -595,40 +589,37 @@ void Filtro_Particulas::pubInicialPose()
 		thetamedia -= 2.0 * M_PI;
 	if(thetamedia <= - M_PI)
 		thetamedia += 2.0 * M_PI;
-
-	for (int i = 0; i < num_part_ ; i++)
+	if(convergiu_ == 0)
 	{
-		double dx = particle_pose_[i].x - xmedia;
-		//cout<<"partx - xmedia: "<<particle_pose_[i].x<<" - "<<xmedia<<endl;
-		double dy = particle_pose_[i].y - ymedia;
-		//cout<<"party - ymedia: "<<particle_pose_[i].y<<" - "<<ymedia<<endl;
-		double err = sqrt( (dx * dx) + (dy * dy) );
-		//cout<<"erro: "<<err<<endl;
-		sum += err;
+		for (int i = 0; i < num_part_ ; i++)
+		{
+			double dx = particle_pose_[i].x - xmedia;
+			//cout<<"partx - xmedia: "<<particle_pose_[i].x<<" - "<<xmedia<<endl;
+			double dy = particle_pose_[i].y - ymedia;
+			//cout<<"party - ymedia: "<<particle_pose_[i].y<<" - "<<ymedia<<endl;
+			double err = sqrt( (dx * dx) + (dy * dy) );
+			//cout<<"erro: "<<err<<endl;
+			sum += err;
+			//cout<<"sum: "<<sum<<endl;
+		}
+		sum = sum / num_part_;
 		//cout<<"sum: "<<sum<<endl;
+		//usleep(250000);
 	}
-	sum = sum / num_part_;
-	//cout<<"sum: "<<sum<<endl;
-	//usleep(250000);
 
 	if(sum < error_particles_)
 	{
-		initial_pose2_.x = xmedia;
-		initial_pose2_.y = ymedia;
-		initial_pose2_.theta = thetamedia;
+		initial_pose2_.x = particle_pose_[index_max_w_].x;//xmedia;
+		initial_pose2_.y = particle_pose_[index_max_w_].y;//ymedia;
+		initial_pose2_.theta = particle_pose_[index_max_w_].theta;//thetamedia;
 
 		initial_pose_pub_.publish(initial_pose2_);
-		cout<<"x: "<<xmedia<<" | y: "<<ymedia<<" | theta: "<<thetamedia<<endl;
+		//cout<<"x: "<<xmedia<<" | y: "<<ymedia<<" | theta: "<<thetamedia<<endl;
 
-		zerar++;
-		if(zerar > 10)
-			cont = 0;
+		reduz_gauss_ = 2.0;
 
-	}else{
-		cont++;
-		zerar = 0;
+		convergiu_++;
 	}
-	//cout<<"cont: "<<cont<<" | sum: "<<sum<<endl;
 }
 
 void Filtro_Particulas::cloud()

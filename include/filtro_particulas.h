@@ -95,6 +95,7 @@ class Filtro_Particulas
 		geometry_msgs::Pose2D initial_pose2_;
 		//geometry_msgs::Quaternion odom_quat_;
 
+		double reduz_gauss_;
 		double arctan_;
 		double hipot_;
 		double freq_;
@@ -108,7 +109,7 @@ class Filtro_Particulas
 		int min_y_;
 		int max_x_;
 		int max_y_;
-		int zerar;
+		int convergiu_;
 		bool obstacle_finded_;
 		int obstacle_;
 		int achou;
@@ -118,6 +119,7 @@ class Filtro_Particulas
 		double probt;
 		double passo;
 		double sum;
+		int index_max_w_;
 
 		int rand_xy;
 		double pose_x;
