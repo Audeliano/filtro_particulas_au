@@ -609,16 +609,23 @@ void Filtro_Particulas::pubInicialPose()
 
 	if(sum < error_particles_)
 	{
-		initial_pose2_.x = particle_pose_[index_max_w_].x;//xmedia;
-		initial_pose2_.y = particle_pose_[index_max_w_].y;//ymedia;
-		initial_pose2_.theta = particle_pose_[index_max_w_].theta;//thetamedia;
+		//Para publicar o pose médio.
+		initial_pose2_.x = xmedia;
+		initial_pose2_.y = ymedia;
+		initial_pose2_.theta = thetamedia;
 
+		//para publicar o pose da partícula com maior peso.
+/*		initial_pose2_.x = particle_pose_[index_max_w_].x;
+		initial_pose2_.y = particle_pose_[index_max_w_].y;
+		initial_pose2_.theta = particle_pose_[index_max_w_].theta;
+
+		convergiu_++;
+*/
 		initial_pose_pub_.publish(initial_pose2_);
 		//cout<<"x: "<<xmedia<<" | y: "<<ymedia<<" | theta: "<<thetamedia<<endl;
 
 		reduz_gauss_ = 2.0;
 
-		convergiu_++;
 	}
 }
 

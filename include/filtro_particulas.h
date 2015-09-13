@@ -49,12 +49,9 @@ class Filtro_Particulas
 
 		double gaussian(double mu, double sigma, double x);
 		double gaussian(double mu, double sigma);
-		//void set_noise(double move_noise, double turn_noise);
 
 		void odomCallback (const nav_msgs::OdometryConstPtr& msg);
 		void laserCallback (const sensor_msgs::LaserScanConstPtr& scan);
-		//void min_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& min_xy);
-		//void max_xyCallback (const std_msgs::Int32MultiArray::ConstPtr& max_xy);
 		void occ_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& occ_coordxy);
 		void free_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& free_coordxy);
 
@@ -63,25 +60,13 @@ class Filtro_Particulas
 
 		void spin();
 
-
-
-
 	private:
 		ros::NodeHandle n_;
-		double res_;
-
-		int num_part_;
-		int qtdd_laser_;
-		double passo_base;
-		int range_max_fakelaser; //[m]
-		double error_particles_;
 
 		nav_msgs::Odometry odometry_;
 
 		ros::Subscriber odom_sub_;
 		ros::Subscriber scan_sub_;
-		//ros::Subscriber min_xy_sub_;
-		//ros::Subscriber max_xy_sub_;
 		ros::Subscriber occ_coordxy_sub_;
 		ros::Subscriber free_coordxy_sub_;
 
@@ -93,7 +78,14 @@ class Filtro_Particulas
 		geometry_msgs::Pose2D particle_resample_[10000];
 		geometry_msgs::PoseWithCovarianceStamped initial_pose_;
 		geometry_msgs::Pose2D initial_pose2_;
-		//geometry_msgs::Quaternion odom_quat_;
+
+		double res_;
+
+		int num_part_;
+		int qtdd_laser_;
+		double passo_base;
+		int range_max_fakelaser; //[m]
+		double error_particles_;
 
 		double reduz_gauss_;
 		double arctan_;
@@ -133,18 +125,13 @@ class Filtro_Particulas
 		int i;
 		int num_laser;
 
-
 		geometry_msgs::Pose2D delta_pose_;
 		geometry_msgs::Pose2D pose_anterior_;
-
 		geometry_msgs::Pose2D pose;
-
-		//int delta_y_;
-		//int delta_theta_;
+		geometry_msgs::Pose2D fake_laser_pose_[1000];
 
 		double laser_data_[1000];
 		double ang_min_;
-		geometry_msgs::Pose2D fake_laser_pose_[1000];
 		double pose_x_;
 		double pose_y_;
 		double pose_theta_;
@@ -166,8 +153,6 @@ class Filtro_Particulas
 		bool laser_ok_;
 		bool zerar_deltas_;
 		int create_particle_ok_;
-
-
 
 };
 
