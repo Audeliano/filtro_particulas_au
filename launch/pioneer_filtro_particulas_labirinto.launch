@@ -1,0 +1,10 @@
+<launch>
+	<include file="$(find p2os_launch)/launch/tf_lrf_p2os_teleop.launch" />
+
+	<!--include file="$(find filtro_particulas)/launch/teste_na_mao.launch" /-->
+
+	<include file="$(find filtro_particulas)/launch/labirinto.launch" />		
+
+	<!--node pkg="rosaria_teleop" type="rosaria_teleop" name="rosaria_teleop" /-->
+
+</launch>
