@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(filtro_particulas)
+project(filtro_particulas_samcl)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   nav_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -46,8 +47,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
+ add_message_files(
+   FILES
+   grid_pose_energy.msg
+ )
 #   Message1.msg
 #   Message2.msg
 # )
@@ -67,10 +70,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -85,7 +88,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES filtro_particulas
 #  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+  DEPENDS message_runtime
 )
 
 ###########
@@ -104,7 +107,7 @@ ${Boost_INCLUDE_DIRS})
 # )
 
 ## Declare a cpp executable
-add_executable(filtro_particulas
+add_executable(filtro_particulas_samcl
 		src/filtro_particulas.cpp
 		src/filtro_particulas_node.cpp)
 
@@ -113,7 +116,7 @@ add_executable(filtro_particulas
 # add_dependencies(filtro_particulas_node filtro_particulas_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(filtro_particulas
+target_link_libraries(filtro_particulas_samcl
   ${catkin_LIBRARIES})
 
 set (CMAKE_CXX_FLAGS "-std=c++0x")

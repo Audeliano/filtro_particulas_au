@@ -35,9 +35,6 @@ CMAKE_COMMAND = /usr/bin/cmake
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
 
-# The program to use to edit the cache.
-CMAKE_EDIT_COMMAND = /usr/bin/ccmake
-
 # The top-level source directory on which CMake was run.
 CMAKE_SOURCE_DIR = /home/au/catkin_ws/src
 
@@ -49,8 +46,8 @@ CMAKE_BINARY_DIR = /home/au/catkin_ws/src
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running interactive CMake command-line interface..."
+	/usr/bin/cmake -i .
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -120,14 +117,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/au/catkin_ws/src && $(CMAKE_COMMAND) -E cmake_progress_start /home/au/catkin_ws/src/CMakeFiles /home/au/catkin_ws/src/filtro_particulas/CMakeFiles/progress.marks
-	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas/all
+	cd /home/au/catkin_ws/src && $(CMAKE_COMMAND) -E cmake_progress_start /home/au/catkin_ws/src/CMakeFiles /home/au/catkin_ws/src/filtro_particulas_samcl/CMakeFiles/progress.marks
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/au/catkin_ws/src/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas/clean
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/clean
 .PHONY : clean
 
 # The main clean target
@@ -136,12 +133,12 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas/preinstall
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas/preinstall
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
@@ -150,25 +147,123 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-filtro_particulas/CMakeFiles/filtro_particulas.dir/rule:
-	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas/CMakeFiles/filtro_particulas.dir/rule
-.PHONY : filtro_particulas/CMakeFiles/filtro_particulas.dir/rule
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/rule
 
 # Convenience name for target.
-filtro_particulas: filtro_particulas/CMakeFiles/filtro_particulas.dir/rule
-.PHONY : filtro_particulas
+filtro_particulas_samcl: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/rule
+.PHONY : filtro_particulas_samcl
 
 # fast build rule for target.
-filtro_particulas/fast:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/build
-.PHONY : filtro_particulas/fast
+filtro_particulas_samcl/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build
+.PHONY : filtro_particulas_samcl/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_gencpp: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/rule
+.PHONY : filtro_particulas_samcl_gencpp
+
+# fast build rule for target.
+filtro_particulas_samcl_gencpp/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_gencpp.dir/build
+.PHONY : filtro_particulas_samcl_gencpp/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_generate_messages: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/rule
+.PHONY : filtro_particulas_samcl_generate_messages
+
+# fast build rule for target.
+filtro_particulas_samcl_generate_messages/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages.dir/build
+.PHONY : filtro_particulas_samcl_generate_messages/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_generate_messages_cpp: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/rule
+.PHONY : filtro_particulas_samcl_generate_messages_cpp
+
+# fast build rule for target.
+filtro_particulas_samcl_generate_messages_cpp/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_cpp.dir/build
+.PHONY : filtro_particulas_samcl_generate_messages_cpp/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_generate_messages_lisp: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/rule
+.PHONY : filtro_particulas_samcl_generate_messages_lisp
+
+# fast build rule for target.
+filtro_particulas_samcl_generate_messages_lisp/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_lisp.dir/build
+.PHONY : filtro_particulas_samcl_generate_messages_lisp/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_generate_messages_py: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/rule
+.PHONY : filtro_particulas_samcl_generate_messages_py
+
+# fast build rule for target.
+filtro_particulas_samcl_generate_messages_py/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_generate_messages_py.dir/build
+.PHONY : filtro_particulas_samcl_generate_messages_py/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_genlisp: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/rule
+.PHONY : filtro_particulas_samcl_genlisp
+
+# fast build rule for target.
+filtro_particulas_samcl_genlisp/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genlisp.dir/build
+.PHONY : filtro_particulas_samcl_genlisp/fast
+
+# Convenience name for target.
+filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/rule:
+	cd /home/au/catkin_ws/src && $(MAKE) -f CMakeFiles/Makefile2 filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/rule
+.PHONY : filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/rule
+
+# Convenience name for target.
+filtro_particulas_samcl_genpy: filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/rule
+.PHONY : filtro_particulas_samcl_genpy
+
+# fast build rule for target.
+filtro_particulas_samcl_genpy/fast:
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl_genpy.dir/build
+.PHONY : filtro_particulas_samcl_genpy/fast
 
 src/filtro_particulas.o: src/filtro_particulas.cpp.o
 .PHONY : src/filtro_particulas.o
 
 # target to build an object file
 src/filtro_particulas.cpp.o:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas.cpp.o
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas.cpp.o
 .PHONY : src/filtro_particulas.cpp.o
 
 src/filtro_particulas.i: src/filtro_particulas.cpp.i
@@ -176,7 +271,7 @@ src/filtro_particulas.i: src/filtro_particulas.cpp.i
 
 # target to preprocess a source file
 src/filtro_particulas.cpp.i:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas.cpp.i
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas.cpp.i
 .PHONY : src/filtro_particulas.cpp.i
 
 src/filtro_particulas.s: src/filtro_particulas.cpp.s
@@ -184,7 +279,7 @@ src/filtro_particulas.s: src/filtro_particulas.cpp.s
 
 # target to generate assembly for a file
 src/filtro_particulas.cpp.s:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas.cpp.s
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas.cpp.s
 .PHONY : src/filtro_particulas.cpp.s
 
 src/filtro_particulas_node.o: src/filtro_particulas_node.cpp.o
@@ -192,7 +287,7 @@ src/filtro_particulas_node.o: src/filtro_particulas_node.cpp.o
 
 # target to build an object file
 src/filtro_particulas_node.cpp.o:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas_node.cpp.o
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas_node.cpp.o
 .PHONY : src/filtro_particulas_node.cpp.o
 
 src/filtro_particulas_node.i: src/filtro_particulas_node.cpp.i
@@ -200,7 +295,7 @@ src/filtro_particulas_node.i: src/filtro_particulas_node.cpp.i
 
 # target to preprocess a source file
 src/filtro_particulas_node.cpp.i:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas_node.cpp.i
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas_node.cpp.i
 .PHONY : src/filtro_particulas_node.cpp.i
 
 src/filtro_particulas_node.s: src/filtro_particulas_node.cpp.s
@@ -208,7 +303,7 @@ src/filtro_particulas_node.s: src/filtro_particulas_node.cpp.s
 
 # target to generate assembly for a file
 src/filtro_particulas_node.cpp.s:
-	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas/CMakeFiles/filtro_particulas.dir/build.make filtro_particulas/CMakeFiles/filtro_particulas.dir/src/filtro_particulas_node.cpp.s
+	cd /home/au/catkin_ws/src && $(MAKE) -f filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/build.make filtro_particulas_samcl/CMakeFiles/filtro_particulas_samcl.dir/src/filtro_particulas_node.cpp.s
 .PHONY : src/filtro_particulas_node.cpp.s
 
 # Help Target
@@ -218,7 +313,14 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
-	@echo "... filtro_particulas"
+	@echo "... filtro_particulas_samcl"
+	@echo "... filtro_particulas_samcl_gencpp"
+	@echo "... filtro_particulas_samcl_generate_messages"
+	@echo "... filtro_particulas_samcl_generate_messages_cpp"
+	@echo "... filtro_particulas_samcl_generate_messages_lisp"
+	@echo "... filtro_particulas_samcl_generate_messages_py"
+	@echo "... filtro_particulas_samcl_genlisp"
+	@echo "... filtro_particulas_samcl_genpy"
 	@echo "... install"
 	@echo "... install/local"
 	@echo "... install/strip"

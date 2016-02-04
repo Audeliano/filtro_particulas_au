@@ -3,6 +3,6 @@ prefix=/home/au/catkin_ws/install
 Name: filtro_particulas
 Description: Description of filtro_particulas
 Version: 0.0.0
-Cflags: 
+Cflags: -I/home/au/catkin_ws/install/include
 Libs: -L/home/au/catkin_ws/install/lib 
-Requires: 
+Requires: message_runtime

@@ -9,6 +9,7 @@
 #include "geometry_msgs/PoseArray.h"
 
 #include "map_server/image_loader.h"
+#include "nav_msgs/GetMap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,9 @@
 #include "sensor_msgs/LaserScan.h"
 #include "tf/tf.h"
 
+#include "filtro_particulas_samcl/grid_pose_energy.h"
+
+
 #define sign(a) (((a) < 0) ? -1 : (((a) > 0) ? 1 : 0))
 
 using namespace std;
@@ -33,7 +37,7 @@ using namespace std;
 class Filtro_Particulas
 {
 	public:
-		Filtro_Particulas(ros::NodeHandle n, double res);
+		Filtro_Particulas(ros::NodeHandle n);
 		virtual ~Filtro_Particulas();
 
 	public:
@@ -54,9 +58,12 @@ class Filtro_Particulas
 		void laserCallback (const sensor_msgs::LaserScanConstPtr& scan);
 		void occ_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& occ_coordxy);
 		void free_coordxyCallback (const std_msgs::Int32MultiArray::ConstPtr& free_coordxy);
+		void mapCallback (const nav_msgs::MapMetaDataConstPtr& msg);
 
 		void pubInicialPose();
 		void cloud();
+
+		void createGrids();
 
 		void spin();
 
@@ -69,6 +76,7 @@ class Filtro_Particulas
 		ros::Subscriber scan_sub_;
 		ros::Subscriber occ_coordxy_sub_;
 		ros::Subscriber free_coordxy_sub_;
+		ros::Subscriber map_meta_data_sub_;
 
 		ros::Publisher particle_cloud_pub_;
 		ros::Publisher initial_pose_pub_;
@@ -79,12 +87,15 @@ class Filtro_Particulas
 		geometry_msgs::PoseWithCovarianceStamped initial_pose_;
 		geometry_msgs::Pose2D initial_pose2_;
 
+		filtro_particulas_samcl::grid_pose_energy grid_pose_energy_[100000];
+
+		double map_meta_data_;
 		double res_;
 
 		int num_part_;
 		int qtdd_laser_;
 		double passo_base;
-		int range_max_fakelaser; //[m]
+		double range_max_fakelaser; //[m]
 		double error_particles_;
 
 		double reduz_gauss_;
@@ -124,6 +135,7 @@ class Filtro_Particulas
 		int yi;
 		int i;
 		int num_laser;
+		int num_energy_;
 
 		geometry_msgs::Pose2D delta_pose_;
 		geometry_msgs::Pose2D pose_anterior_;
@@ -153,6 +165,7 @@ class Filtro_Particulas
 		bool laser_ok_;
 		bool zerar_deltas_;
 		int create_particle_ok_;
+		bool grids_ok_;
 
 };
 
